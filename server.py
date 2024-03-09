@@ -6,7 +6,6 @@ import requests    # For Wikipedia API integration
 class NotebookServer:
     def __init__(self):
         self.database = "notebook.xml"
-
     def add_note(self, topic, text, timestamp):
         tree = ET.parse(self.database)
         root = tree.getroot()

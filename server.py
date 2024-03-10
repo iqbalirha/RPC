@@ -1,11 +1,13 @@
-import xmlrpc.server
-import xmlrpc.client
 import xml.etree.ElementTree as ET
-import requests    # For Wikipedia API integration
+from xmlrpc.server import SimpleXMLRPCServer, SimpleXMLRPCRequestHandler
+from socketserver import ThreadingMixIn  # Import ThreadingMixIn for threading support
+from concurrent.futures import ThreadPoolExecutor
+import requests
 
 class NotebookServer:
     def __init__(self):
         self.database = "notebook.xml"
+
     def add_note(self, topic, text, timestamp):
         tree = ET.parse(self.database)
         root = tree.getroot()
@@ -48,7 +50,6 @@ class NotebookServer:
         return notes
 
     def get_wikipedia_info(self, topic):
-        # Query Wikipedia API for additional information
         url = f"https://en.wikipedia.org/w/api.php?action=opensearch&search={topic}&limit=1&format=json"
         response = requests.get(url)
         data = response.json()
@@ -57,7 +58,14 @@ class NotebookServer:
         else:
             return "No additional information found on Wikipedia."
 
-server = xmlrpc.server.SimpleXMLRPCServer(("localhost", 8000))
-server.register_instance(NotebookServer())
-print("Server listening on port 8000...")
-server.serve_forever()
+class ThreadedXMLRPCServer(ThreadingMixIn, SimpleXMLRPCServer):
+    pass
+
+def main():
+    server = ThreadedXMLRPCServer(("localhost", 8000), requestHandler=SimpleXMLRPCRequestHandler, logRequests=True)
+    server.register_instance(NotebookServer())
+    print("Server listening on port 8000...")
+    server.serve_forever()
+
+if __name__ == "__main__":
+    main()

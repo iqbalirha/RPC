@@ -1,7 +1,6 @@
 import xml.etree.ElementTree as ET
 from xmlrpc.server import SimpleXMLRPCServer, SimpleXMLRPCRequestHandler
-from socketserver import ThreadingMixIn  # Import ThreadingMixIn for threading support
-from concurrent.futures import ThreadPoolExecutor
+from socketserver import ThreadingMixIn
 import requests
 
 class NotebookServer:
@@ -9,8 +8,12 @@ class NotebookServer:
         self.database = "notebook.xml"
 
     def add_note(self, topic, text, timestamp):
-        tree = ET.parse(self.database)
-        root = tree.getroot()
+        try:
+            tree = ET.parse(self.database)
+            root = tree.getroot()
+        except ET.ParseError:
+            # If the file does not exist or is not valid XML, create a new root element
+            root = ET.Element("notes")
 
         # Check if topic exists, if not, create a new entry
         topic_exists = False
@@ -33,12 +36,16 @@ class NotebookServer:
             timestamp_elem.text = timestamp
             root.append(note)
 
+        tree = ET.ElementTree(root)
         tree.write(self.database)
         return "Note added successfully."
 
     def get_notes(self, topic):
-        tree = ET.parse(self.database)
-        root = tree.getroot()
+        try:
+            tree = ET.parse(self.database)
+            root = tree.getroot()
+        except (ET.ParseError, FileNotFoundError):
+            return "Database does not exist or is not valid XML format."
 
         notes = []
         for note in root.findall('note'):

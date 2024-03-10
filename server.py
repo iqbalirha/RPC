@@ -8,6 +8,17 @@ class NotebookServer:
         self.database = "notebook.xml"
 
     def add_note(self, topic, text, timestamp):
+        """
+               Add a note to the database.
+
+               Args:
+                   topic (str): The topic of the note.
+                   text (str): The content of the note.
+                   timestamp (str): The timestamp of when the note was added.
+
+               Returns:
+                   str: A message indicating success or failure.
+               """
         try:
             tree = ET.parse(self.database)
             root = tree.getroot()
@@ -41,6 +52,15 @@ class NotebookServer:
         return "Note added successfully."
 
     def get_notes(self, topic):
+        """
+                Retrieve notes from the database based on the given topic.
+
+                Args:
+                    topic (str): The topic to retrieve notes for.
+
+                Returns:
+                    list: A list of dictionaries containing text and timestamp of notes.
+                """
         try:
             tree = ET.parse(self.database)
             root = tree.getroot()
@@ -57,6 +77,16 @@ class NotebookServer:
         return notes
 
     def get_wikipedia_info(self, topic):
+        """
+                Query Wikipedia API for additional information related to the given topic.
+
+                Args:
+                    topic (str): The topic to search for on Wikipedia.
+
+                Returns:
+                    str: A link to the Wikipedia article or a message indicating no information found.
+                """
+
         url = f"https://en.wikipedia.org/w/api.php?action=opensearch&search={topic}&limit=1&format=json"
         response = requests.get(url)
         data = response.json()
@@ -69,6 +99,9 @@ class ThreadedXMLRPCServer(ThreadingMixIn, SimpleXMLRPCServer):
     pass
 
 def main():
+    """
+        Initialize and start the XML-RPC server.
+        """
     server = ThreadedXMLRPCServer(("localhost", 8000), requestHandler=SimpleXMLRPCRequestHandler, logRequests=True)
     server.register_instance(NotebookServer())
     print("Server listening on port 8000...")
